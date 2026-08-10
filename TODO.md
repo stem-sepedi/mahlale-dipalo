@@ -1,7 +1,7 @@
 # TODO.md
 
 > **All milestones complete.** 41 API endpoints, 8 service modules, full test suite, Docker deployment.
-> Last updated: Roadmaps added — per-grade (R–12) config + university tier
+> Last updated: Question → LLM issue-triage workflow added (M10)
 
 ## Roadmaps (planning documents, not yet scheduled for implementation)
 
@@ -20,6 +20,52 @@
   - [ ] U5 University LMS integration (tier-aware Moodle plugin, LTI Advantage depth, university sync)
   - [ ] U6 Academic governance (academic reviewer role, glossary contributions, provenance)
   - [ ] U7 University pilot & foundation launch (one subject end-to-end at uni-foundation)
+
+## Milestone 10 — Question Triage to LLM via Forgejo/Gitea Issues
+
+Questions asked by students are triaged through a Forgejo/Gitea issue pipeline before and after
+the LLM engine answers them. Labels track lifecycle; teachers/parents verify.
+
+### M10.1 Ingest — new question → issue
+
+- [ ] `src/api/routes/questions.py` — `POST /questions` accepts a student question (text, grade, subject, student ref)
+- [ ] Forgejo client `src/services/forgejo_client.py` — create issue in configured project/repo on submit
+- [ ] New issue created with label `LLM_BACKLOG` (all NEW questions awaiting an LLM answer)
+- [ ] Issue body includes original question text, grade, subject, student/anonymous ref, timestamps
+
+### M10.2 Triage — before calling the LLM
+
+- [ ] Lookup existing questions (in Forgejo, by search/issues API) before invoking the engine
+- [ ] If **already answered** → reuse existing answer; no new LLM call
+- [ ] If **similar** question already exists → add label `LLM_SIMILAR` to the new issue as well
+- [ ] Triage result recorded on the issue (matching issue ref / similarity notes)
+
+### M10.3 Dispatch — hand the job to the LLM
+
+- [ ] On dispatch, remove `LLM_BACKLOG` label and add `LLM_WIP` label (replace per spec)
+- [ ] `POST /questions/{id}/answer` (or worker) triggers TranslationEngine/LLM answer against Ollama
+- [ ] Answer generation queued via MQTT (`question.answer.request` / `question.answer.completed`) like the translation pipeline
+
+### M10.4 Completion — answer stored + human review queue
+
+- [ ] On answer completion, update issue labels: add `LLM_DONE` **and** `HUMAN_BACKLOG` (labelled alongside, not replacing)
+- [ ] Answer persisted to DB (`question_answers` table) with issue ref + LLM confidence
+- [ ] Answer posted back to the issue for the requester teacher/parent visibility
+
+### M10.5 Moderation — teacher/parent verification
+
+- [ ] `POST /questions/{id}/verify` — teacher/parent role confirms an answer
+- [ ] On confirmation add label `HUMAN_VERIFIED`, keeping `LLM_DONE` alongside
+- [ ] `POST /questions/{id}/reject` — reject answer → issue reopened with `REJECTED` label + sent back to `LLM_BACKLOG` for regeneration
+- [ ] Moderation queue surfaced in UI (team UI filter by `HUMAN_BACKLOG` label)
+
+### M10.6 Config & docs
+
+- [ ] `.env` additions: `FORGEJO_URL`, `FORGEJO_TOKEN` (backed by existing `GITEA_TOKEN`), `FORGEJO_OWNER+REPO`, API keys
+- [ ] Label idempotency — labels applied via unique set, replaced cleanly, never duplicated
+- [ ] Docs: `docs/QUESTION_TRIAGE.md` — workflow + Forgejo label guide
+- [ ] Tests for triage decision (new / answered / similar) driven by mocked Forgejo API
+- [ ] Update this TODO.md — mark complete when shipped
 
 ## Milestone 9 — Moodle Integration (Self-Hosted) ✓
 
