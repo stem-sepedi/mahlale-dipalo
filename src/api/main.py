@@ -12,6 +12,7 @@ from src.api.routes.auth import router as auth_router
 from src.api.routes.concepts import router as concepts_router
 from src.api.routes.embed import router as embed_router
 from src.api.routes.explanations import router as explanations_router
+from src.api.routes.grades import router as grades_router
 from src.api.routes.metrics import router as metrics_router
 from src.api.routes.moderation import router as moderation_router
 from src.api.routes.moodle import router as moodle_router
@@ -64,6 +65,7 @@ app.include_router(metrics_router)
 app.include_router(moodle_router)
 app.include_router(moodle_webhooks_router)
 app.include_router(questions_router)
+app.include_router(grades_router)
 app.include_router(embed_router)
 
 # Static widget assets (/widgets/translation-widget.js etc.)

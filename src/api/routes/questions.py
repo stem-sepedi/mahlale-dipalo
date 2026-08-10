@@ -13,6 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from src.middleware.jwt import TokenPayload, require_role
+from src.services.grade_config import validate_grade
 from src.services.question_triage import triage_question
 
 logger = logging.getLogger(__name__)
@@ -64,6 +65,12 @@ async def create_question(
     """Accept a student question, mirror it to a Forgejo issue, and triage it."""
     if not req.question_text.strip():
         raise HTTPException(status_code=422, detail="question_text is required")
+
+    if req.grade is not None:
+        try:
+            req.grade = validate_grade(req.grade)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from None
 
     pool = await _get_pool()
     client = _forgejo()

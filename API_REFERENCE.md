@@ -807,6 +807,54 @@ Rejects an answer. Reopens the issue with `REJECTED` and returns it to
 
 ---
 
+## Grade Catalog Endpoints (R1)
+
+Per-grade/phase configuration (Grade R–12 + University) driving every
+grade-sensitive behaviour. Backed by the `grade_catalog` table; see
+`ROADMAP_GRADES_R12.md`.
+
+| Method | Path           | Auth  | Purpose                                  |
+|--------|----------------|-------|------------------------------------------|
+| GET    | `/grades`      | admin | Full catalog (R–12 + University)         |
+| GET    | `/grades/{grade}` | any authenticated user | One grade's config + CAPS reference |
+
+### GET /grades
+
+**Response (200):**
+```json
+{
+  "grades": [
+    {
+      "grade": 8,
+      "phase": "senior",
+      "band": "senior",
+      "name_en": "Grade 8",
+      "name_sep": "Mphato wa 8",
+      "age_min": 13,
+      "age_max": 14,
+      "vocab_level": 4,
+      "curriculum_ref": "CAPS Natural Sciences / Mathematics"
+    }
+  ]
+}
+```
+
+### GET /grades/{grade}
+
+Same shape for one grade. Invalid grades (`13`, `-1`, `100`…) return `422`;
+grades `0–12` and `99` are accepted.
+
+**Grade bounds:** all grade-bearing endpoints (`/concepts`, `/explain`,
+`/concepts/{id}/quiz`, `/quiz/validate`, `/questions`, `/translate`) now reject
+grades outside `0–12`/`99` with `422` via a central validator
+(`src/services/grade_config.py`).
+
+**Per-instance overrides:** `GRADE_CONFIG_OVERRIDES` env var
+(e.g. `{"8":{"vocab_level":5}}`) merges onto the seeded catalog without a DB
+change.
+
+---
+
 ## Rate Limiting
 
 | Role | Requests per minute |

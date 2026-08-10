@@ -6,7 +6,7 @@
 ## Roadmaps (planning documents, not yet scheduled for implementation)
 
 - [ ] **Grade R–12 configuration** — see `ROADMAP_GRADES_R12.md`
-  - [ ] R1 Grade catalog & per-grade configuration (migration 003 + validator 0–12, 99)
+  - [x] **R1 Grade catalog & per-grade configuration** — `grade_catalog` seeded R–12 + 99, central validator (0–12, 99), `GET /grades`, `GRADE_CONFIG_OVERRIDES` (migration 004)
   - [ ] R2 Curriculum-aligned per-grade prompting (vocab levels 1–6, phase registers)
   - [ ] R3 CAPS content coverage per grade (import, MQTT bulk, coverage dashboard)
   - [ ] R4 Per-grade UX + operator/admin configuration, widget & Moodle grade mapping

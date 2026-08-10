@@ -76,6 +76,9 @@ class Settings:
     FORGEJO_OWNER: str = os.getenv("FORGEJO_OWNER", "")
     FORGEJO_REPO: str = os.getenv("FORGEJO_REPO", "")
 
+    # Grade catalog — R1 per-instance overrides (JSON: {"8": {"vocab_level": 5}})
+    GRADE_CONFIG_OVERRIDES: str = os.getenv("GRADE_CONFIG_OVERRIDES", "")
+
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
     LOG_FORMAT: str = os.getenv("LOG_FORMAT", "json")
