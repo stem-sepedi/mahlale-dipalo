@@ -1,0 +1,20 @@
+# Polelo — Docker ignore
+.git
+.github
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+dist/
+build/
+.venv/
+venv/
+env/
+.env
+*.md
+!README.md
+screenshots/
+.ruff_cache/
+.pytest_cache/
+.coverage
+.mypy_cache/

@@ -1,0 +1,93 @@
+# ============================================================
+# Polelo — Full stack docker-compose
+# Usage: docker compose up -d
+# ============================================================
+
+services:
+  # ---- Application ----
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://polelo:polelo_3f2d4f7d-5d33-4878-92f8-8ebae619f6e4@postgres:5432/polelo
+# If using locally hosted ollama already running
+#      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      OLLAMA_BASE_URL: http://ollama:11434
+      MQTT_BROKER: mqtt
+      MQTT_PORT: 1883
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: minioadmin_3f2d4f7d-5d33-4878-92f8-8ebae619f6e4
+      S3_SECRET_KEY: minioadmin_3f2d4f7d-5d33-4878-92f8-8ebae619f6e4
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mqtt:
+        condition: service_started
+    restart: unless-stopped
+    volumes:
+      - screenshots:/app/screenshots
+
+  # ---- PostgreSQL ----
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: polelo
+      POSTGRES_USER: polelo
+      POSTGRES_PASSWORD: polelo_3f2d4f7d-5d33-4878-92f8-8ebae619f6e4
+# If running at separate server from app
+#    ports:
+#      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/migrations/001_initial_schema.sql:/docker-entrypoint-initdb.d/001_initial_schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U polelo"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # ---- MinIO (S3-compatible storage) ----
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin_3f2d4f7d-5d33-4878-92f8-8ebae619f6e4
+# If running at separate server from app
+#    ports:
+#      - "9000:9000"
+#      - "9001:9001"
+    volumes:
+      - miniodata:/data
+    restart: unless-stopped
+
+  # ---- MQTT Broker (Mosquitto) ----
+  mqtt:
+    image: eclipse-mosquitto:2
+# If running at separate server from app
+#    ports:
+#      - "1883:1883"
+    volumes:
+      - mosquitto:/mosquitto/data
+      - ./deploy/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    restart: unless-stopped
+
+  # ---- Ollama (LLM inference) ----
+  ollama:
+    image: ollama/ollama:latest
+# If running at separate server from app
+#    ports:
+#      - "11434:11434"
+    volumes:
+      - ollamadata:/root/.ollama
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  miniodata:
+  screenshots:
+  mosquitto:
+  ollamadata:
