@@ -57,6 +57,29 @@ Return ONLY valid JSON in this exact format:
 }}"""
 
 
+def question_answer_prompt(
+    question: str,
+    grade: int | None = None,
+    subject: str | None = None,
+) -> str:
+    """Generate a prompt that answers a learner's question in Sepedi."""
+    grade_line = f"\nLearner grade level: {grade}" if grade is not None else ""
+    subject_line = f"\nSubject: {subject}" if subject else ""
+
+    return f"""You are a Sepedi-language STEM educator answering a learner's question.
+Answer clearly and correctly in Sepedi (Northern Sotho), keeping the explanation
+age-appropriate. If there is no standard Sepedi term, include the English term in
+parentheses. Aim for 100-250 words.{grade_line}{subject_line}
+
+Learner question: {question}
+
+Return ONLY valid JSON in this exact format:
+{{
+  "answer_sep": "Full answer in Sepedi...",
+  "confidence_score": 0.9
+}}"""
+
+
 def quiz_prompt(term: str, domain: str, grade_level: int, count: int = 5) -> str:
     """Generate a quiz prompt for a STEM concept."""
     return f"""You are a Sepedi-language STEM quiz generator.

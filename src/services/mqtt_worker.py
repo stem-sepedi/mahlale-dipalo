@@ -13,6 +13,8 @@ MQTT_BROKER = os.getenv("MQTT_BROKER", "localhost")
 MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
 MQTT_TOPIC_TRANSLATION_REQUEST = "translation.request"
 MQTT_TOPIC_TRANSLATION_COMPLETED = "translation.completed"
+MQTT_TOPIC_QUESTION_ANSWER_REQUEST = "question.answer.request"
+MQTT_TOPIC_QUESTION_ANSWER_COMPLETED = "question.answer.completed"
 
 
 class MQTTProducer:
@@ -46,6 +48,28 @@ class MQTTProducer:
         })
         result = self._client.publish(MQTT_TOPIC_TRANSLATION_REQUEST, payload, qos=1)
         logger.info("Published translation request for %s (mid=%s)", concept_id, result.mid)
+        return result.mid
+
+    def publish_question_answer_request(self, question_id: str) -> int:
+        """Queue an LLM answer generation job for a learner question."""
+        payload = json.dumps({
+            "question_id": question_id,
+            "request_id": str(uuid4()),
+        })
+        result = self._client.publish(MQTT_TOPIC_QUESTION_ANSWER_REQUEST, payload, qos=1)
+        logger.info("Published question answer request for %s (mid=%s)", question_id, result.mid)
+        return result.mid
+
+    def publish_question_answer_completed(self, question_id: str, answer_sep: str, confidence_score: float) -> int:
+        """Broadcast that an LLM answer has been persisted for a question."""
+        payload = json.dumps({
+            "question_id": question_id,
+            "answer_sep": answer_sep,
+            "confidence_score": confidence_score,
+            "request_id": str(uuid4()),
+        })
+        result = self._client.publish(MQTT_TOPIC_QUESTION_ANSWER_COMPLETED, payload, qos=1)
+        logger.info("Published question answer completed for %s (mid=%s)", question_id, result.mid)
         return result.mid
 
     def disconnect(self):

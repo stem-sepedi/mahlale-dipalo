@@ -23,7 +23,7 @@ class Settings:
     DB_POOL_MAX: int = int(os.getenv("DB_POOL_MAX", "10"))
 
     # Ollama
-    OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL") or os.getenv("OLLAMA_HOST", "http://localhost:11434")
     OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL", "llama3.2")
 
     # MQTT
@@ -68,6 +68,13 @@ class Settings:
     EMBED_BASE_URL: str = os.getenv("EMBED_BASE_URL", "")
     # Origins allowed to frame the /embed/* pages (space/comma separated or "*")
     EMBED_ALLOWED_ORIGINS: str = os.getenv("EMBED_ALLOWED_ORIGINS", "*")
+
+    # Forgejo/Gitea — M10 question triage
+    FORGEJO_URL: str = os.getenv("FORGEJO_URL", "")
+    # Falls back to the existing GITEA_TOKEN when FORGEJO_TOKEN is not set
+    FORGEJO_TOKEN: str = os.getenv("FORGEJO_TOKEN", "") or os.getenv("GITEA_TOKEN", "")
+    FORGEJO_OWNER: str = os.getenv("FORGEJO_OWNER", "")
+    FORGEJO_REPO: str = os.getenv("FORGEJO_REPO", "")
 
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
