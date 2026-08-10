@@ -42,6 +42,8 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./db/migrations/001_initial_schema.sql:/docker-entrypoint-initdb.d/001_initial_schema.sql
+      - ./db/migrations/001b_moodle_db.sql:/docker-entrypoint-initdb.d/001b_moodle_db.sql
+      - ./db/migrations/002_moodle_schema.sql:/docker-entrypoint-initdb.d/002_moodle_schema.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U polelo"]
       interval: 5s
@@ -85,9 +87,51 @@ services:
       - ollamadata:/root/.ollama
     restart: unless-stopped
 
+  # ---- Moodle LMS (self-hosted, LTI + widget embedding host) ----
+  moodle:
+    image: bitnami/moodle:4
+    container_name: polelo-moodle
+    environment:
+      MOODLE_DATABASE_HOST: postgres
+      MOODLE_DATABASE_PORT_NUMBER: 5432
+      MOODLE_DATABASE_NAME: moodle
+      MOODLE_DATABASE_USER: moodle
+      MOODLE_DATABASE_PASSWORD: moodle_3f2d4f7d-5d33-4878-92f8-8ebae619f6e4
+      MOODLE_DATABASE_TYPE: pgsql
+      MOODLE_USERNAME: admin
+      MOODLE_PASSWORD: admin_3f2d4f7d-5d33-4878-92f8-8ebae619f6e4
+      MOODLE_SITE_NAME: "Polelo STEM Sepedi"
+      MOODLE_FORCE_SSL: "no"
+      MOODLE_SKIP_BOOTSTRAP: "no"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - moodledata:/bitnami/moodle
+      - ./moodle/local/polelo:/bitnami/moodle/moodle/local/polelo:rw
+    restart: unless-stopped
+
+  # ---- Moodle cron container for background plugin tasks ----
+  moodle-cron:
+    image: bitnami/moodle:4
+    depends_on:
+      - moodle
+    environment:
+      MOODLE_DATABASE_HOST: postgres
+      MOODLE_DATABASE_PORT_NUMBER: 5432
+      MOODLE_DATABASE_NAME: moodle
+      MOODLE_DATABASE_USER: moodle
+      MOODLE_DATABASE_PASSWORD: moodle_3f2d4f7d-5d33-4878-92f8-8ebae619f6e4
+      MOODLE_DATABASE_TYPE: pgsql
+    command: /opt/bitnami/scripts/moodle/run_cron.sh
+    restart: unless-stopped
+
 volumes:
   pgdata:
   miniodata:
   screenshots:
   mosquitto:
   ollamadata:
+  moodledata:

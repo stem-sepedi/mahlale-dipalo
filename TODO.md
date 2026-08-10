@@ -1,9 +1,9 @@
 # TODO.md
 
 > **All milestones complete.** 41 API endpoints, 8 service modules, full test suite, Docker deployment.
-> Last updated: Milestone 8 — Production Hardening + Docker Deployment
+> Last updated: Milestone 9 — Moodle Integration (Self-Hosted)
 
-## Milestone 9 — Moodle Integration (Self-Hosted)
+## Milestone 9 — Moodle Integration (Self-Hosted) ✓
 
 ### M9.1 REST API — Content Source for Moodle ✓
 - [x] `/moodle/concepts` — paginated concept feed (JSON-LD + plain) for Moodle enrolment
@@ -14,57 +14,62 @@
 - [x] API key auth for Moodle server (X-Moodle-Key header, separate from worker keys)
 - [x] Rate limit: 60 RPM per Moodle instance (IP-based via existing rate limiter)
 
-### M9.2 Moodle Plugin — local_polelo (LTI Tool Provider)
-- [ ] `moodle/local/polelo/version.php` — plugin metadata
-- [ ] `moodle/local/polelo/db/access.php` — capability definitions
-- [ ] `moodle/local/polelo/settings.php` — admin settings (Polelo URL, API key, MQTT broker)
-- [ ] `moodle/local/polelo/lib.php` — hook callbacks (course_module, moodle_page)
-- [ ] `moodle/local/polelo/lti/` — LTI 1.3 tool provider implementation
-  - [ ] `tool_provider.php` — OIDC login initiation + launch response
-  - [ ] `jwt_grant.php` — JWT signing for LTI advantage services
-  - [ ] `grades.php` — assignment grade passback
-- [ ] `moodle/local/polelo/classes/` — PHP class files
-  - [ ] `polelo_api_client.php` — HTTP client for Polelo REST API
-  - [ ] `polelo_mqtt_bridge.php` — MQTT publish for real-time translation requests
-- [ ] `moodle/local/polelo/lang/en/local_polelo.php` — language strings
-- [ ] `moodle/local/polelo/db/install.xml` — XMLDB table definitions
-- [ ] `moodle/local/polelo/tests/` — PHPUnit tests for plugin
+### M9.2 Moodle Plugin — local_polelo (LTI Tool Provider) ✓
+- [x] `moodle/local/polelo/version.php` — plugin metadata
+- [x] `moodle/local/polelo/db/access.php` — capability definitions
+- [x] `moodle/local/polelo/settings.php` — admin settings (Polelo URL, API key, MQTT broker)
+- [x] `moodle/local/polelo/lib.php` — hook callbacks (course_module, moodle_page)
+- [x] `moodle/local/polelo/lti/` — LTI 1.3 tool provider implementation
+  - [x] `tool_provider.php` — OIDC login initiation + launch response
+  - [x] `jwt_grant.php` — JWT signing for LTI advantage services
+  - [x] `grades.php` — assignment grade passback
+- [x] `moodle/local/polelo/classes/` — PHP class files
+  - [x] `polelo_api_client.php` — HTTP client for Polelo REST API
+  - [x] `polelo_mqtt_bridge.php` — MQTT publish for real-time translation requests
+  - [x] `polelo_widgets.php` — widget markup builders (data-attr + iframe)
+- [x] `moodle/local/polelo/lang/en/local_polelo.php` — language strings
+- [x] `moodle/local/polelo/db/install.xml` — XMLDB table definitions
+- [x] `moodle/local/polelo/tests/` — PHPUnit tests for plugin
+- [x] `moodle/local/polelo/index.php` — sync landing page
+- [x] `moodle/local/polelo/amd/src/init.js` — AMD JS module for widget loading
 
-### M9.3 Embeddable Widgets — iframe-based Translation/Quiz
-- [ ] `src/web/widgets/translation-widget.js` — lightweight JS widget (fetch + render)
-- [ ] `src/web/widgets/quiz-widget.js` — interactive quiz widget (questions + scoring)
-- [ ] `src/web/widgets/polelo-embed.js` — auto-detect `[polelo-translate]` shortcodes in Moodle HTML
-- [ ] `/embed/translate` — standalone translation page (iframe target)
-- [ ] `/embed/quiz` — standalone quiz page (iframe target)
-- [ ] Widget config: theme colors, default grade level, Sepedi/English toggle
-- [ ] CSP headers + CORS for cross-origin iframe embedding
+### M9.3 Embeddable Widgets — iframe-based Translation/Quiz ✓
+- [x] `src/web/widgets/translation-widget.js` — lightweight JS widget (fetch + render)
+- [x] `src/web/widgets/quiz-widget.js` — interactive quiz widget (questions + scoring)
+- [x] `src/web/widgets/polelo-embed.js` — auto-detect `[polelo-translate]` shortcodes in Moodle HTML
+- [x] `/embed/translate` — standalone translation page (iframe target)
+- [x] `/embed/quiz` — standalone quiz page (iframe target)
+- [x] `/embed/api/translate/{concept_id}` + `/embed/api/quiz/{concept_id}` — public widget data API
+- [x] Widget config: theme colors, default grade level, Sepedi/English toggle
+- [x] CSP headers + CORS for cross-origin iframe embedding
 
-### M9.4 Webhook-Based Sync — Moodle → Polelo
-- [ ] `/moodle/webhooks/enrolment` — course enrolment event → trigger bulk translation
-- [ ] `/moodle/webhooks/activity` — activity completion → update concept mastery
-- [ ] `/moodle/webhooks/quiz-submission` — quiz attempt → store results in Polelo
-- [ ] Webhook signature verification (HMAC-SHA256)
-- [ ] Webhook queue: async processing via MQTT
-- [ ] `src/services/moodle_sync.py` — sync engine (poll + push hybrid)
-- [ ] Sync state table: `moodle_sync_state` (last_sync, course_id, status)
+### M9.4 Webhook-Based Sync — Moodle → Polelo ✓
+- [x] `/moodle/webhooks/enrolment` — course enrolment event → trigger bulk translation
+- [x] `/moodle/webhooks/activity` — activity completion → update concept mastery
+- [x] `/moodle/webhooks/quiz-submission` — quiz attempt → store results in Polelo
+- [x] Webhook signature verification (HMAC-SHA256)
+- [x] Webhook queue: async processing via MQTT
+- [x] `src/services/moodle_sync.py` — sync engine (poll + push hybrid)
+- [x] Sync state table: `moodle_sync_state` (last_sync, course_id, status)
 
-### M9.5 Database & Config
-- [ ] `db/migrations/002_moodle_schema.sql` — moodle_instances, moodle_courses, moodle_sync_state, moodle_webhook_logs
-- [ ] `db/rollbacks/M/2/rollback.sh`
-- [ ] `.env` additions: `MoodleLtiSecret`, `MoodleWebhookSecret`, `MoodleApiKey`
+### M9.5 Database & Config ✓
+- [x] `db/migrations/002_moodle_schema.sql` — moodle_instances, moodle_courses, moodle_sync_state, moodle_webhook_logs
+- [x] `db/migrations/001b_moodle_db.sql` — Docker init for the Moodle database
+- [x] `db/rollbacks/M/2/rollback.sh`
+- [x] `.env` additions: `MoodleLtiSecret`, `MoodleWebhookSecret`, `MoodleApiKey`, `EMBED_BASE_URL`, `EMBED_ALLOWED_ORIGINS`
 
-### M9.6 Docker Compose — Add Moodle Container
-- [ ] Add `moodle` service to docker-compose.yml (bitnami/moodle or custom)
-- [ ] Moodle DB config pointed at same PostgreSQL
-- [ ] Moodle cron container for background tasks
-- [ ] Volume mount for Moodle data + plugin source
+### M9.6 Docker Compose — Add Moodle Container ✓
+- [x] Add `moodle` service to docker-compose.yml (bitnami/moodle)
+- [x] Moodle DB config pointed at same PostgreSQL
+- [x] Moodle cron container for background tasks
+- [x] Volume mount for Moodle data + plugin source
 
-### M9.7 Documentation
-- [ ] `docs/MOODLE_INSTALL.md` — step-by-step Moodle plugin install
-- [ ] `docs/MOODLE_API.md` — content source API reference
-- [ ] `docs/MOODLE_WIDGETS.md` — widget embed guide
-- [ ] Update `API_REFERENCE.md` with /moodle/* endpoints
-- [ ] Update `TODO.md` with completion summary
+### M9.7 Documentation ✓
+- [x] `docs/MOODLE_INSTALL.md` — step-by-step Moodle plugin install
+- [x] `docs/MOODLE_API.md` — content source API reference
+- [x] `docs/MOODLE_WIDGETS.md` — widget embed guide
+- [x] Update `API_REFERENCE.md` with /moodle/* endpoints
+- [x] Update `TODO.md` with completion summary
 
 ## Milestone 8 — Production Hardening ✓
 
