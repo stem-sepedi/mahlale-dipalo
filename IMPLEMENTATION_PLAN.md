@@ -6,6 +6,16 @@ Version: 0.1
 
 ---
 
+## Roadmaps
+
+Scope expansion is tracked separately:
+- `ROADMAP_GRADES_R12.md` — per-grade configuration (Grade R → 12, CAPS-aligned).
+- `ROADMAP_UNIVERSITY.md` — university tier (grade 99) and TVET (grade 100).
+
+Both are planning documents; schedule the milestones here once scoped.
+
+---
+
 ## Overview
 
 This plan decomposes development into milestone-based phases. Each milestone is a coherent deliverable submitted as a Gitea PR for human review before merging to main. Per AGENTS.md rules: every feature lives on its own branch, no broken code, atomic commits, tests required.
