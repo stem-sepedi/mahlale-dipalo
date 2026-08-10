@@ -16,6 +16,7 @@ from src.api.routes.metrics import router as metrics_router
 from src.api.routes.moderation import router as moderation_router
 from src.api.routes.moodle import router as moodle_router
 from src.api.routes.moodle_webhooks import router as moodle_webhooks_router
+from src.api.routes.questions import router as questions_router
 from src.api.routes.queue import router as queue_router
 from src.api.routes.quiz import router as quiz_router
 from src.api.routes.reviews import router as reviews_router
@@ -62,6 +63,7 @@ app.include_router(screenshots_router)
 app.include_router(metrics_router)
 app.include_router(moodle_router)
 app.include_router(moodle_webhooks_router)
+app.include_router(questions_router)
 app.include_router(embed_router)
 
 # Static widget assets (/widgets/translation-widget.js etc.)

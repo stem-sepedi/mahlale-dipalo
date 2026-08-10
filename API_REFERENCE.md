@@ -720,6 +720,93 @@ Takes a screenshot of the given URL using headless Chromium.
 
 ---
 
+## Question Triage Endpoints (M10)
+
+Student questions are mirrored to a Forgejo/Gitea issue and answered by the LLM
+engine after a triage pass. Labels on the issue track the lifecycle:
+`LLM_BACKLOG` → `LLM_WIP` → `LLM_DONE` + `HUMAN_BACKLOG` → (`HUMAN_VERIFIED` | `REJECTED`).
+See `docs/QUESTION_TRIAGE.md`.
+
+| Method | Path                        | Auth               | Purpose                              |
+|--------|-----------------------------|--------------------|--------------------------------------|
+| POST   | `/questions`                | learner/teacher/admin | Submit a question (creates issue + triages) |
+| GET    | `/questions`                | learner/teacher/admin | List questions; `status=human_backlog` = moderation queue |
+| GET    | `/questions/{id}`           | learner/teacher/admin | Single question with answers |
+| POST   | `/questions/{id}/answer`    | teacher/admin      | Dispatch to LLM (queued via MQTT)    |
+| POST   | `/questions/{id}/verify`    | teacher/admin      | Confirm an answer (→ `HUMAN_VERIFIED`) |
+| POST   | `/questions/{id}/reject`    | teacher/admin      | Reject an answer (→ `REJECTED`, back to `LLM_BACKLOG`) |
+
+### POST /questions
+
+**Request:**
+```json
+{
+  "question_text": "What is photosynthesis?",
+  "grade": 8,
+  "subject": "Biology",
+  "student_ref": "learner-042"
+}
+```
+
+**Response (201):**
+```json
+{
+  "question": {
+    "id": "<uuid>",
+    "question_text": "What is photosynthesis?",
+    "grade": 8,
+    "subject": "Biology",
+    "student_ref": "learner-042",
+    "forgejo_issue_number": 12,
+    "triage_status": "new"
+  },
+  "triage": {
+    "decision": "new",
+    "matching_issue_number": null,
+    "answer": null
+  }
+}
+```
+
+`triage.decision` is `new` (proceed to LLM), `similar` (an unanswered issue with
+the same topic exists — labelled `LLM_SIMILAR`), or `answered` (an existing
+answer is reused — returned in `triage.answer`, no LLM call).
+
+### GET /questions?status=human_backlog
+
+Returns the teacher/parent moderation queue — questions whose latest answer is
+`llm_done` and awaiting verification. Other status values: `new`, `similar`,
+`dispatched`, `answered`, `verified`, `rejected`.
+
+### POST /questions/{id}/answer
+
+Dispatches the question to the LLM. Adds `LLM_WIP` (removing `LLM_BACKLOG`),
+records an `mqtt_jobs` row, and publishes `question.answer.request` on MQTT. The
+`question_worker` generates the answer, stores it in `question_answers` (status
+`llm_done`), adds `LLM_DONE` + `HUMAN_BACKLOG`, posts the answer back to the
+issue, and broadcasts `question.answer.completed`.
+
+**Response (202):**
+```json
+{
+  "status": "dispatched",
+  "question_id": "<uuid>",
+  "forgejo_issue_number": 12
+}
+```
+
+### POST /questions/{id}/verify
+
+Teacher/parent confirms an answer. Adds `HUMAN_VERIFIED` (keeping `LLM_DONE`).
+**Body (optional):** `{"review_comment": "..."}`
+
+### POST /questions/{id}/reject
+
+Rejects an answer. Reopens the issue with `REJECTED` and returns it to
+`LLM_BACKLOG` for regeneration. **Body (optional):** `{"review_comment": "..."}`
+
+---
+
 ## Rate Limiting
 
 | Role | Requests per minute |

@@ -69,6 +69,13 @@ class Settings:
     # Origins allowed to frame the /embed/* pages (space/comma separated or "*")
     EMBED_ALLOWED_ORIGINS: str = os.getenv("EMBED_ALLOWED_ORIGINS", "*")
 
+    # Forgejo/Gitea — M10 question triage
+    FORGEJO_URL: str = os.getenv("FORGEJO_URL", "")
+    # Falls back to the existing GITEA_TOKEN when FORGEJO_TOKEN is not set
+    FORGEJO_TOKEN: str = os.getenv("FORGEJO_TOKEN", "") or os.getenv("GITEA_TOKEN", "")
+    FORGEJO_OWNER: str = os.getenv("FORGEJO_OWNER", "")
+    FORGEJO_REPO: str = os.getenv("FORGEJO_REPO", "")
+
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
     LOG_FORMAT: str = os.getenv("LOG_FORMAT", "json")
