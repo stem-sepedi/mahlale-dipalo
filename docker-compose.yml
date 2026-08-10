@@ -45,6 +45,7 @@ services:
       - ./db/migrations/001b_moodle_db.sql:/docker-entrypoint-initdb.d/001b_moodle_db.sql
       - ./db/migrations/002_moodle_schema.sql:/docker-entrypoint-initdb.d/002_moodle_schema.sql
       - ./db/migrations/003_question_triage.sql:/docker-entrypoint-initdb.d/003_question_triage.sql
+      - ./db/migrations/004_grade_catalog.sql:/docker-entrypoint-initdb.d/004_grade_catalog.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U polelo"]
       interval: 5s

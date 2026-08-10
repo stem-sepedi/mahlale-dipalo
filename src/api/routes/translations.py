@@ -1,12 +1,12 @@
 """Translate routes — /translate, /translations/{id}, /translations/{id}/submit."""
 
+import asyncpg
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-import asyncpg
 
 from src.middleware.jwt import TokenPayload, get_current_user, require_role
+from src.services.grade_config import validate_grade_levels
 from src.services.translation_engine import TranslationEngine
-from src.services.status_engine import validate_transition
 
 router = APIRouter(tags=["translations"])
 
@@ -33,6 +33,11 @@ async def translate(
     req: TranslateRequest,
     user: TokenPayload = Depends(require_role("translator", "teacher", "admin")),
 ):
+    try:
+        grade_levels = validate_grade_levels(req.grade_levels)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from None
+
     engine = TranslationEngine()
     pool = await _get_pool()
 
@@ -44,7 +49,7 @@ async def translate(
         concept = await pool.fetchrow(
             """INSERT INTO concepts (name_en, domain, grade_levels, status, created_by)
                VALUES ($1, $2, $3, 'draft', $4) RETURNING id""",
-            req.term, req.domain, req.grade_levels, user.sub,
+            req.term, req.domain, grade_levels, user.sub,
         )
 
     # Generate translations via Ollama

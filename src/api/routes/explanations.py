@@ -1,10 +1,11 @@
 """Explain routes — /explain, /explanations/{id}/submit."""
 
+import asyncpg
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-import asyncpg
 
 from src.middleware.jwt import TokenPayload, get_current_user, require_role
+from src.services.grade_config import validate_grade
 from src.services.translation_engine import TranslationEngine
 
 router = APIRouter(tags=["explanations"])
@@ -26,13 +27,18 @@ async def explain(
     req: ExplainRequest,
     user: TokenPayload = Depends(require_role("teacher", "admin")),
 ):
+    try:
+        grade_level = validate_grade(req.grade_level)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from None
+
     pool = await _get_pool()
     concept = await pool.fetchrow("SELECT * FROM concepts WHERE id = $1", req.concept_id)
     if not concept:
         raise HTTPException(status_code=404, detail="Concept not found")
 
     engine = TranslationEngine()
-    result = await engine.explain(concept["name_en"], concept["domain"], req.grade_level)
+    result = await engine.explain(concept["name_en"], concept["domain"], grade_level)
 
     row = await pool.fetchrow(
         """INSERT INTO explanations
@@ -40,7 +46,7 @@ async def explain(
            VALUES ($1, $2, $3, $4, 'draft', 'AI Agent', $5)
            RETURNING *""",
         req.concept_id,
-        req.grade_level,
+        grade_level,
         result.get("content_sep", ""),
         result.get("examples_sep", []),
         user.sub,

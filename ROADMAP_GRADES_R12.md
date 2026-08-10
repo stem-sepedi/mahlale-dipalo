@@ -36,17 +36,20 @@ CAPS curriculum for that grade.
 
 ---
 
-## Milestone R1 — Grade Catalog & Per-Grade Configuration
+## Milestone R1 — Grade Catalog & Per-Grade Configuration ✓
+
+> **Shipped.** Migration number moved to `004_grade_catalog.sql` (003 was already
+> used by M10 question triage); rollback lives at `db/rollbacks/M/R1/rollback.sh`.
 
 **Goal:** A first-class grade/phase registry that drives every grade-sensitive behaviour.
 
 | # | Task | Scope | Acceptance Criterion |
 |---|------|-------|---------------------|
-| R1.1 | `grade_catalog` table | `db/migrations/003_grade_catalog.sql`: rows for grade R (0)…12 and phase 13-99 (University); columns `grade`, `phase`, `band`, `name_en`, `name_sep`, `age_min`, `age_max`, `vocab_level` (1–6), `curriculum_ref` | Seeded with R–12 matching the table above; grade 8 resolves to `senior` band, vocab level 4 |
-| R1.2 | Settings provider | `src/services/grade_config.py` — loads catalog, supports overrides per instance (JSON in a config table or env) | `get_grade_config(8)` returns band, vocab_level, age band, curriculum ref without DB round-trip per request |
+| R1.1 | `grade_catalog` table | `db/migrations/004_grade_catalog.sql`: rows for grade R (0)…12 and 99 (University); columns `grade`, `phase`, `band`, `name_en`, `name_sep`, `age_min`, `age_max`, `vocab_level` (1–6), `curriculum_ref` | Seeded with R–12 matching the table above; grade 8 resolves to `senior` band, vocab level 4 |
+| R1.2 | Settings provider | `src/services/grade_config.py` — loads catalog, supports overrides per instance (`GRADE_CONFIG_OVERRIDES` JSON env) | `get_grade_config(8)` returns band, vocab_level, age band, curriculum ref without DB round-trip per request |
 | R1.3 | Grade spec endpoint | `GET /grades` (admin) + `GET /grades/{grade}` returns config and CAPS reference | Seeded data only; no write endpoint yet |
-| R1.4 | Validate grade bounds | Migrate all `grade_level` validation to accept 0–12 and 99, reject others (central validator in `src/config.py` or a shared util) | `500`→`422` for grade 13; 0 and 99 accepted |
-| R1.5 | Rollback script | `db/rollbacks/M/3/rollback.sh` | Drops catalog table cleanly |
+| R1.4 | Validate grade bounds | Migrate all `grade_level` validation to accept 0–12 and 99, reject others (central validator in `src/services/grade_config.py`) | `500`→`422` for grade 13; 0 and 99 accepted |
+| R1.5 | Rollback script | `db/rollbacks/M/R1/rollback.sh` | Drops catalog table cleanly |
 
 **PR branch:** `roadmap/r1-grade-catalog`
 

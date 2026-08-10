@@ -1,10 +1,11 @@
 """Concept CRUD routes — /concepts."""
 
+import asyncpg
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
-import asyncpg
 
 from src.middleware.jwt import TokenPayload, get_current_user, require_role
+from src.services.grade_config import validate_grade, validate_grade_levels
 
 router = APIRouter(prefix="/concepts", tags=["concepts"])
 
@@ -64,6 +65,10 @@ async def list_concepts(
         idx += 1
 
     if grade is not None:
+        try:
+            grade = validate_grade(grade)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from None
         conditions.append(f"${idx} = ANY(c.grade_levels)")
         params.append(grade)
         idx += 1
@@ -104,12 +109,17 @@ async def create_concept(
     req: ConceptCreate,
     user: TokenPayload = Depends(require_role("teacher", "admin")),
 ):
+    try:
+        grade_levels = validate_grade_levels(req.grade_levels)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from None
+
     pool = await _get_pool()
     row = await pool.fetchrow(
         """INSERT INTO concepts (name_en, definition_en, domain, grade_levels, status, created_by)
            VALUES ($1, $2, $3, $4, 'draft', $5)
            RETURNING *""",
-        req.name_en, req.definition_en, req.domain, req.grade_levels, user.sub,
+        req.name_en, req.definition_en, req.domain, grade_levels, user.sub,
     )
     concept = dict(row)
     concept["_links"] = _concept_links(str(row["id"]))
@@ -151,6 +161,12 @@ async def update_concept(
     updates = {k: v for k, v in req.model_dump(exclude_unset=True).items()}
     if not updates:
         raise HTTPException(status_code=422, detail="No fields to update")
+
+    if "grade_levels" in updates:
+        try:
+            updates["grade_levels"] = validate_grade_levels(updates["grade_levels"])
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from None
 
     set_parts = []
     params: list = []

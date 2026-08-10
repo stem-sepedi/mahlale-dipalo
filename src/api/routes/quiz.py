@@ -1,10 +1,11 @@
 """Quiz routes — /concepts/{id}/quiz, /quiz/validate."""
 
+import asyncpg
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
-import asyncpg
 
 from src.middleware.jwt import TokenPayload, get_current_user
+from src.services.grade_config import validate_grade
 from src.services.translation_engine import TranslationEngine
 
 router = APIRouter(tags=["quiz"])
@@ -25,11 +26,16 @@ class QuizValidateRequest(BaseModel):
 @router.get("/concepts/{concept_id}/quiz")
 async def get_quiz(
     concept_id: str,
-    grade_level: int = Query(8, ge=0, le=12),
+    grade_level: int = Query(8),
     count: int = Query(5, ge=1, le=20),
     type: str = Query("all", description="all, fill_in_blank, multiple_choice, short_answer"),
     user: TokenPayload = Depends(get_current_user),
 ):
+    try:
+        grade_level = validate_grade(grade_level)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from None
+
     pool = await _get_pool()
     concept = await pool.fetchrow("SELECT * FROM concepts WHERE id = $1", concept_id)
     if not concept:
@@ -72,6 +78,11 @@ async def validate_quiz(
     req: QuizValidateRequest,
     user: TokenPayload = Depends(get_current_user),
 ):
+    try:
+        req.grade_level = validate_grade(req.grade_level)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from None
+
     pool = await _get_pool()
     results = []
     correct_count = 0
