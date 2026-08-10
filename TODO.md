@@ -1,7 +1,25 @@
 # TODO.md
 
 > **All milestones complete.** 41 API endpoints, 8 service modules, full test suite, Docker deployment.
-> Last updated: Milestone 9 — Moodle Integration (Self-Hosted)
+> Last updated: Roadmaps added — per-grade (R–12) config + university tier
+
+## Roadmaps (planning documents, not yet scheduled for implementation)
+
+- [ ] **Grade R–12 configuration** — see `ROADMAP_GRADES_R12.md`
+  - [ ] R1 Grade catalog & per-grade configuration (migration 003 + validator 0–12, 99)
+  - [ ] R2 Curriculum-aligned per-grade prompting (vocab levels 1–6, phase registers)
+  - [ ] R3 CAPS content coverage per grade (import, MQTT bulk, coverage dashboard)
+  - [ ] R4 Per-grade UX + operator/admin configuration, widget & Moodle grade mapping
+  - [ ] R5 Quiz & assessment alignment (CAPS verbs, difficulty ladder, XML grade binding)
+  - [ ] R6 Per-phase rollout & quality (complexity benchmark, pilot packs, PWA grade cache)
+- [ ] **University tier (grade 99, TVET 100)** — see `ROADMAP_UNIVERSITY.md`
+  - [ ] U1 University tier foundation (uni_tier, extended domains, tier validator/config API)
+  - [ ] U2 Academic Sepedi register (academic prompts, glossary authority feed, citation, curation)
+  - [ ] U3 Subject coverage expansion (engineering, stats, biochemistry; per-subject prompt packs)
+  - [ ] U4 Lecture/tutorial/assessment assets (worked examples, Bloom-ladder question sets, exam export)
+  - [ ] U5 University LMS integration (tier-aware Moodle plugin, LTI Advantage depth, university sync)
+  - [ ] U6 Academic governance (academic reviewer role, glossary contributions, provenance)
+  - [ ] U7 University pilot & foundation launch (one subject end-to-end at uni-foundation)
 
 ## Milestone 9 — Moodle Integration (Self-Hosted) ✓
 
