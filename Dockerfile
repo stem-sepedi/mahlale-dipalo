@@ -34,6 +34,7 @@ COPY src/ ./src/
 COPY db/ ./db/
 COPY php/ ./php/
 COPY deploy/ ./deploy/
+COPY moodle/ ./moodle/
 COPY .env.example ./
 
 # Create screenshot directory and gotcha permissions

@@ -58,6 +58,16 @@ class Settings:
     MOODLE_API_KEYS: list[str] = [
         k.strip() for k in os.getenv("MOODLE_API_KEYS", "").split(",") if k.strip()
     ]
+    MOODLE_API_KEY = os.getenv("MoodleApiKey", "")
+    MOODLE_LTI_SECRET = os.getenv("MoodleLtiSecret", "")
+    MOODLE_WEBHOOK_SECRET: list[str] = [
+        k.strip() for k in os.getenv("MoodleWebhookSecret", "").split(",") if k.strip()
+    ]
+
+    # Embedded widgets
+    EMBED_BASE_URL: str = os.getenv("EMBED_BASE_URL", "")
+    # Origins allowed to frame the /embed/* pages (space/comma separated or "*")
+    EMBED_ALLOWED_ORIGINS: str = os.getenv("EMBED_ALLOWED_ORIGINS", "*")
 
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")

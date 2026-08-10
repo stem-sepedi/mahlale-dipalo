@@ -736,3 +736,100 @@ Excess requests return `429 Too Many Requests` with a `Retry-After` header.
 ## OpenAPI Spec
 
 A full OpenAPI 3.x specification (`openapi.yaml`) is auto-generated from Pydantic models at runtime and served at `/docs`. Browsing the URL in-browser activates Swagger UI for interactive API exploration.
+
+---
+
+## Moodle Content Source API
+
+The `/moodle/*` endpoints expose published content to self-hosted Moodle LMS
+instances. Auth uses a dedicated `X-Moodle-Key` header (separate key space from
+AI workers and JWT users).
+
+**Auth header:**
+```
+X-Moodle-Key: <moodle-instance-key>
+```
+
+**Rate limit:** 60 requests/minute per Moodle instance (IP-based).
+
+| Method | Path                           | Purpose                                   |
+|--------|--------------------------------|-------------------------------------------|
+| GET    | `/moodle/concepts`             | Paginated published concept feed          |
+| GET    | `/moodle/concepts/{id}`        | Single concept (translation + explanation)|
+| GET    | `/moodle/quizzes`              | Quiz bank export (json or Moodle XML)     |
+| GET    | `/moodle/quizzes/{concept_id}` | Quiz questions for one concept            |
+| GET    | `/moodle/courses/{id}/sync`    | Pull concepts + quizzes for a course      |
+| POST   | `/moodle/courses/{id}/sync`    | Push completion/mastery back              |
+
+Full reference: see `docs/MOODLE_API.md`.
+
+### Example — GET /moodle/concepts
+
+**Query params:** `page`, `limit` (≤200), `domain`, `grade`, `since` (ISO-8601),
+`format` (`plain`|`jsonld`).
+
+**Response (200):**
+```json
+{
+  "concepts": [
+    {
+      "concept_id": "<uuid>",
+      "name_en": "Photosynthesis",
+      "definition_en": "...",
+      "domain": "Biology",
+      "grade_levels": [5, 8, 10],
+      "sepedi_term": "Go belaela ga dimela",
+      "confidence_score": 0.87,
+      "explanation_sep": "...",
+      "explanation_grade": 8,
+      "updated_at": "2026-07-24T10:00:00Z"
+    }
+  ],
+  "total": 1247,
+  "page": 1,
+  "limit": 50,
+  "has_next": true
+}
+```
+
+### Example — GET /moodle/quizzes?format=moodle_xml
+
+Returns an `application/xml` attachment (`polelo_quiz_bank.xml`) in Moodle quiz
+XML import format.
+
+## Moodle Webhooks
+
+Signed (HMAC-SHA256) event ingestion from Moodle → Polelo. Immediate responses
+return `{"status":"queued","log_id":"<uuid>"}`; processing is async via MQTT.
+
+| Method | Path                                      | Event            |
+|--------|-------------------------------------------|------------------|
+| POST   | `/moodle/webhooks/enrolment`              | Course enrolment |
+| POST   | `/moodle/webhooks/activity`               | Activity completion |
+| POST   | `/moodle/webhooks/quiz-submission`        | Quiz attempt     |
+
+**Signing headers:** `X-Moodle-Signature` =
+`HMAC_SHA256(<X-Moodle-Timestamp>.<raw-body>)` with the `MoodleWebhookSecret`.
+Timestamp must be within ±300 seconds.
+
+Errors: missing/invalid signature → `401`/`403`; expired window → `401`.
+
+## Embed Widget API
+
+Public (unauthenticated, learner-rate-limited) endpoints used by the embeddable
+JS widgets:
+
+| Method | Path                                  | Purpose                       |
+|--------|---------------------------------------|-------------------------------|
+| GET    | `/embed/translate`                    | Standalone iframe translation page |
+| GET    | `/embed/quiz`                         | Standalone iframe quiz page   |
+| GET    | `/embed/api/translate/{concept_id}`   | Widget data for translation   |
+| GET    | `/embed/api/quiz/{concept_id}`        | Widget data for quiz          |
+| GET    | `/widgets/translation-widget.js`      | Widget script (static)        |
+| GET    | `/widgets/quiz-widget.js`             | Widget script (static)        |
+| GET    | `/widgets/polelo-embed.js`            | Shortcode loader (static)     |
+
+Embed pages send CSP `frame-ancestors` headers controlled by
+`EMBED_ALLOWED_ORIGINS`; widget API responses include CORS headers per
+`CORS_ORIGINS`. Only **published** concepts and **approved** translations/
+explanations are exposed. See `docs/MOODLE_WIDGETS.md`.
